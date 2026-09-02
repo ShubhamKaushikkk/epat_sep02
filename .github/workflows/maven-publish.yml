@@ -1,10 +1,12 @@
-# For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
- 
+# For more information see:
+# https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
+
 name: Maven Package
 
 on:
   push:
     branches: ["main"]
+
   release:
     types: [created]
 
@@ -38,3 +40,14 @@ jobs:
         uses: snyk/actions/maven@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Send Telegram Notification
+        uses: appleboy/telegram-action@master
+        if: always()
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            Repository: ${{ github.repository }}
+            Snyk Scan Result: ${{ steps.snyk_scan.outcome == 'success' && '🟢 PASSED' || '🔴 FAILED' }}
+            Check the run details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
